@@ -1,0 +1,14 @@
+Arms
+Femur_neck
+Femur_shaft
+Femur_total
+Femur_troch
+Femur_wards
+Head
+L1-L4
+Legs
+Pelvis
+Ribs
+Spine
+Trunk
+Total_body

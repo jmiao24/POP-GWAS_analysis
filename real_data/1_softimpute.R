@@ -7,26 +7,23 @@ library(softImpute)
 library(caret)
 library(optparse)
 
-option_list = list(
-    make_option("--t", action="store", type='character')
-)
+# Phenotype data
+pheno <- fread("./data/pheno.txt.gz")
 
-opt = parse_args(OptionParser(option_list=option_list))
+# GWAS covariate data
+covar <- fread("./data/EUR_covar.txt.gz")
 
-t <- opt$t
+# Variables used for imputation
+pred <- fread(paste0("./data/pred.txt.gz"))
 
-# Y
-pheno <- fread("./data/train/DXA/dxa_bone_size_mineral_density.txt.gz")
-covar <- fread("./Resource/Phenotype/EUR_covar.txt.gz")
-pheno.indep <- pheno[pheno$IID %in% covar$IID, ]
-covar <- covar[match(pheno.indep$IID, covar$IID),]
+# Only keep the European samples & Match the order of the data
+pheno <- pheno[pheno$IID %in% covar$IID, ]
+covar <- covar[match(pheno$IID, covar$IID),]
+pred <- pred[match(pheno$IID, pred$IID), ]
 
-# Z
-pred <- fread(paste0("./data/train/DXA_BMD/",t,"_eur.Z.txt"))
-colnames(pred)[1] <- "IID"
-pred <- pred[match(pheno.indep$IID, pred$IID), ]
 
-pred_tmp <- cbind(pred, as.data.frame(pheno.indep)[, t, drop = F])
+# Obtain the residuals after regresing GWAS covariates on the variables used for imputation
+pred_tmp <- cbind(pred, as.data.frame(pheno)[, 2])
 colnames(pred_tmp)[ncol(pred_tmp)] <- "y"
 pred_tmp.1 <- pred_tmp[,"IID",drop=F]
 for (i in 2:ncol(pred_tmp)) {
@@ -42,12 +39,12 @@ pred_tmp.2 <- pred_tmp.1[as.vector(!is.na(pred_tmp.1[, ncol(pred_tmp.1), with = 
 pred_tmp.2 <- clean_names(pred_tmp.2)
 dat <- pred_tmp.2
 
-
 # Cross-fitting
 cv_folds <- createFolds(dat$y_res, k = 10)  # Assuming you're doing 10-fold CV
 test_all <- c()
 r_vec <- c()
 
+# Prediction on labeled data
 set.seed(1234)
 for (i in 1:10) {
     print(i)
@@ -88,7 +85,7 @@ for (i in 1:10) {
 
 r_vec
 
-# Prediction on all data:
+# Prediction on unlabeled data
 pred_tmp.3 <- clean_names(as.data.frame(pred_tmp.1)[, -ncol(pred_tmp.1)])
 pred <- as.matrix(clean_names(as.data.frame(pred_tmp.1)[, -1]))
 lambda.len <- 100
@@ -116,5 +113,7 @@ colnames(pred_all)[ncol(pred_all)] <- "y_hat"
 colnames(pred_all)[1] <- "iid"
 pred_all_out <- pred_all[!(pred_all$iid %in% test_all$iid), ]
 
-fwrite(pred_all_out, paste0("./data/train/DXA_BMD/",t,".unlab_eur.pop.txt"), sep = "\t", quote = F, row.names = F, col.names = T)
-fwrite(test_all, paste0("./data/train/DXA_BMD/",t,".lab_eur.pop.txt"), sep = "\t", quote = F, row.names = F, col.names = T)
+# ML-imputed phenotype in unlabelled data;
+fwrite(pred_all_out, "./data/pheno.unlab_eur.pop.txt", sep = "\t", quote = F, row.names = F, col.names = T)
+# ML-imputed phenotype in labelled data;
+fwrite(test_all, "./data/pheno.lab_eur.pop.txt", sep = "\t", quote = F, row.names = F, col.names = T)
