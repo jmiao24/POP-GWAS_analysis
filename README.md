@@ -20,7 +20,7 @@ The official software package is in [POP-TOOLS](https://github.com/qlu-lab/POP-T
 * `./real_data/4.1_post-GWAS.sh`: estimating heritability and genetic correlation using LD score regression
 * `./real_data/4.2_coloc.R`: colocalization analysis
 
-Example data for reproducing the results is available for download on [Box](https://uwmadison.box.com/s/iede9965ic49yol1r8w7bbx1ngkcrht0). After downloading, place the files in the './real_data/data/' folder and execute the provided codes.
+Example data for reproducing the results is available for download on [Box](https://uwmadison.box.com/s/iede9965ic49yol1r8w7bbx1ngkcrht0). After downloading, place the files in the `./real_data/data/` folder and execute the provided codes.
   
 ## Contact
 Feel free to reach out to Jiacheng at jmiao24@wisc.edu for questions.
